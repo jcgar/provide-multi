@@ -8,7 +8,7 @@ const test = provideCrud('test', {
 });
 
 const testInstance = instantiateProvider(
-  { props: { testId: '123' }, context: {} },
+  { props: { testId: '123' } },
   test
 );
 
