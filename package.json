@@ -16,7 +16,7 @@
   },
   "betterScripts": {
     "test": {
-      "command": "npm run prepublish && mocha --compilers js:babel-register --recursive --require babel-polyfill --require react-redux-provide-test-utils/lib/setup.js",
+      "command": "npm run prepublish && mocha --compilers js:babel-register --recursive --require babel-polyfill",
       "env": {
         "NODE_ENV": "test"
       }
