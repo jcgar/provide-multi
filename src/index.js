@@ -19,9 +19,21 @@ export default function provideCrud(
   };
 
   const idKey = `${name}Id`;
+  const defaultId = typeof init.id === 'undefined' ? '' : init.id;
   const key = ({ props }) => props[idKey] ? `${idKey}=${props[idKey]}` : null;
   const actions = {};
   const reducers = {};
+
+  delete init.id;
+  reducers[idKey] = (state = defaultId, action) => {
+    switch (action.type) {
+      case CREATE:
+        return action[idKey];
+
+      default:
+        return state;
+    }
+  };
 
   const createActionKey = `create${properName}`;
   actions[createActionKey] = (state, genId, onSuccess) => {
@@ -41,9 +53,9 @@ export default function provideCrud(
   };
 
   const updateActionKey = `update${properName}`;
-  actions[updateActionKey] = (state, onSuccess) => {
+  actions[updateActionKey] = (updates, onSuccess) => {
     return (dispatch, getState) => {
-      dispatch({ ...state, type: UPDATE });
+      dispatch({ ...updates, type: UPDATE });
 
       if (onSuccess) {
         onSuccess(getState());
@@ -74,7 +86,9 @@ export default function provideCrud(
   };
 
   const deletedReducerKey = `${name}Deleted`;
-  reducers[deletedReducerKey] = (state = false, action) => {
+  const defaultDeleted = init.deleted || false;
+  delete init.deleted;
+  reducers[deletedReducerKey] = (state = defaultDeleted, action) => {
     switch (action.type) {
       case DELETE:
         return true;
@@ -86,10 +100,6 @@ export default function provideCrud(
         return state;
     }
   };
-
-  if (!init.id) {
-    init.id = '';
-  }
 
   for (let initKey in init) {
     let properKey = initKey[0].toUpperCase()+initKey.substring(1);
