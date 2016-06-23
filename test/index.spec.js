@@ -12,7 +12,7 @@ const testInstance = instantiateProvider(
   test
 );
 
-const { store } = testInstance;
+const { store, actionCreators } = testInstance;
 
 describe('provide-crud', () => {
   it('should create the instance with the correct `providerKey`', () => {
@@ -62,7 +62,7 @@ describe('provide-crud', () => {
   });
 
   it('should properly create', () => {
-    store.dispatch(testInstance.actions.createTest(
+    testInstance.actionCreators.createTest(
       { testFoo: 'FOO!', testBar: 'BAR!' },
       () => '123',
       state => {
@@ -71,7 +71,7 @@ describe('provide-crud', () => {
         expect(state.testBar).toBe('BAR!');
         expect(state.testDeleted).toBe(false);
       }
-    ));
+    );
 
     const state = store.getState();
     expect(state.testId).toBe('123');
@@ -81,7 +81,7 @@ describe('provide-crud', () => {
   });
 
   it('should properly update', () => {
-    store.dispatch(testInstance.actions.updateTest(
+    testInstance.actionCreators.updateTest(
       { testFoo: 'FOO!!!', testBar: 'BAR!!!' },
       state => {
         expect(state.testId).toBe('123');
@@ -89,7 +89,7 @@ describe('provide-crud', () => {
         expect(state.testBar).toBe('BAR!!!');
         expect(state.testDeleted).toBe(false);
       }
-    ));
+    );
 
     const state = store.getState();
     expect(state.testId).toBe('123');
@@ -99,12 +99,12 @@ describe('provide-crud', () => {
   });
 
   it('should properly delete', () => {
-    store.dispatch(testInstance.actions.deleteTest(state => {
+    testInstance.actionCreators.deleteTest(state => {
       expect(state.testId).toBe('123');
       expect(state.testFoo).toBe('FOO!!!');
       expect(state.testBar).toBe('BAR!!!');
       expect(state.testDeleted).toBe(true);
-    }));
+    });
 
     const state = store.getState();
     expect(state.testId).toBe('123');
@@ -114,12 +114,12 @@ describe('provide-crud', () => {
   });
 
   it('should properly undelete', () => {
-    store.dispatch(testInstance.actions.undeleteTest(state => {
+    testInstance.actionCreators.undeleteTest(state => {
       expect(state.testId).toBe('123');
       expect(state.testFoo).toBe('FOO!!!');
       expect(state.testBar).toBe('BAR!!!');
       expect(state.testDeleted).toBe(false);
-    }));
+    });
 
     const state = store.getState();
     expect(state.testId).toBe('123');
@@ -129,7 +129,7 @@ describe('provide-crud', () => {
   });
 
   it('should properly set an individual state', () => {
-    store.dispatch(testInstance.actions.setTestFoo('FOO!!!!!'));
+    testInstance.actionCreators.setTestFoo('FOO!!!!!');
 
     const state = store.getState();
     expect(state.testId).toBe('123');
