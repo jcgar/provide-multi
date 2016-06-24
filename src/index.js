@@ -20,6 +20,7 @@ export default function provideCrud(
 
   const idKey = `${name}Id`;
   const defaultId = typeof init.id === 'undefined' ? '' : init.id;
+  const defaultKey = name;
   const key = ({ props }) => props[idKey] ? `${idKey}=${props[idKey]}` : null;
   const actions = {};
   const reducers = {};
@@ -139,6 +140,12 @@ export default function provideCrud(
   }
 
   return {
-    ...constants, key, actions, reducers, replication, clientStateKeys
+    ...constants,
+    defaultKey,
+    key,
+    actions,
+    reducers,
+    replication,
+    clientStateKeys
   };
 }
