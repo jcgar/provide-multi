@@ -1,4 +1,4 @@
-import provideMulti from 'provide-multi';
+import provideMulti from '../src/index';
 import counter, { INCREMENT, DECREMENT, INITIAL_STATE } from './counter';
 
 const counterMulti = provideMulti({
