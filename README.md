@@ -27,16 +27,38 @@ npm install provide-multi --save
 
 The `props` object must contain the following keys:
 
-- `name` (String) - Suffix used (in proper form) for namespaced actions (Ex: 'counter' will generate 'addCounter' and 'removeCounter')
+- `name` (String) - Suffix used (in proper form) for namespaced actions (Eg: 'counter' will generate 'addCounter' and 'removeCounter')
 - `provider` (Object) - Provider object with 'actions' and 'reducers' keys
-- `actionTypes` (Object) - Enumeration of all action strings exported by the provider (Ex: { INCREMENT, DECREMENT })
+- `actionTypes` (Object) - Enumeration of all action strings exported by the provider (Eg: { INCREMENT, DECREMENT })
 - `initialState` (Object) - Initial state exported by the provider
 
+
+This will generate a provider with an add/remove action, and one action for every one that our single provider has (Eg: increment, decrement). These copied actions receive an index as parameted, and return the dispatch function.
+
+Also, every reducer will be replicated with a 'Multi' suffix, holding an array of single reducers.
 
 
 ## Example
 
-This example
+- Refer action in single provider
+```js
+<MyElement onClick={increment}) />
+```
+- Refer action in in multi provider, for instance index '0'
+```js
+<MyElement onClick={increment(0)}) />
+```
+- Dispatch action in single provider
+```js
+onClick => () { increment(); }
+```
+- Dispatch action in multi provider, for instance index '0'
+```js
+onClick => () { increment(0)(); }
+```
+
+
+Provider definition:
 
 ```js
 // test/counter-multi.js
@@ -53,6 +75,9 @@ const counterMulti = provideMulti({
 
 export default counterMulti;
 ```
+
+
+Example counter provider used to add multiple instance functionality:
 
 ```js
 // test/counter.js
@@ -96,10 +121,10 @@ export default {
 ```
 You'll then have a provider with the following actions:
 
-- `addCounter ()`
-- `removeCounter ()`
-- `increment (Int index)`
-- `decrement (Int index)`
+- `addCounter ()` - Adds an instance to our multiple counter provider
+- `removeCounter ()` - Removes an instance to our multiple counter provider
+- `increment (Int index)` - Returns a function which is equivalent to the single provider action (not dispatched until executed)
+- `decrement (Int index)` - Returns a function which is equivalent to the single provider action (not dispatched until executed)
 
 And reducers:
 
