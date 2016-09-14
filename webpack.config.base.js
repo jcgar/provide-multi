@@ -9,7 +9,7 @@ module.exports = {
     ]
   },
   output: {
-    library: 'provideCrud',
+    library: 'provideMulti',
     libraryTarget: 'umd'
   },
   resolve: {

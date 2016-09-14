@@ -1,9 +1,9 @@
-# provide-crud
+# provide-multi
 
-[![build status](https://img.shields.io/travis/loggur/provide-crud/master.svg?style=flat-square)](https://travis-ci.org/loggur/provide-crud) [![npm version](https://img.shields.io/npm/v/provide-crud.svg?style=flat-square)](https://www.npmjs.com/package/provide-crud)
-[![npm downloads](https://img.shields.io/npm/dm/provide-crud.svg?style=flat-square)](https://www.npmjs.com/package/provide-crud)
+[![build status](https://img.shields.io/travis/jcgar/provide-multi/master.svg?style=flat-square)](https://travis-ci.org/jcgar/provide-multi) [![npm version](https://img.shields.io/npm/v/provide-multi.svg?style=flat-square)](https://www.npmjs.com/package/provide-multi)
+[![npm downloads](https://img.shields.io/npm/dm/provide-multi.svg?style=flat-square)](https://www.npmjs.com/package/provide-multi)
 
-Provider factory for Creating, Reading, Updating, and Deleting resources.
+Provider factory for creating multiple instances of another provider.
 
 
 ## Table of contents
@@ -11,74 +11,101 @@ Provider factory for Creating, Reading, Updating, and Deleting resources.
 1.  [Installation](#installation)
 2.  [Usage](#usage)
 3.  [Example](#example)
-4.  [Real world example](#real-world-example)
-5.  [Protip](#protip)
+4.  [References](#references)
 
 
 ## Installation
 
 ```
-npm install provide-crud --save
+npm install provide-multi --save
 ```
 
 
 ## Usage
 
-### provideCrud (String name, Optional Object init, Optional Object replication, Optional Array clientStateKeys)
+### provideMulti (Object props)
 
-Creates a provider with namespaced actions and reducers specific to [CRUD operations](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete).
+The `props` object must contain the following keys:
 
-The `init` object should contain a map of the unprefixed `reducerKeys` to their initial states.  Each key will be prefixed (namespaced) with the `name` and become each `reducerKey` and will have actions which can be used to set each state.  The only reserved keys for this object are `id` (defaults to empty string) and `deleted` (defaults to false).  You can set a different default `id` or `deleted` initial state by including your own within this object, if necessary.
+- `name` (String) - Suffix used (in proper form) for namespaced actions (Ex: 'counter' will generate 'addCounter' and 'removeCounter')
+- `provider` (Object) - Provider object with 'actions' and 'reducers' keys
+- `actionTypes` (Object) - Enumeration of all action strings exported by the provider (Ex: { INCREMENT, DECREMENT })
+- `initialState` (Object) - Initial state exported by the provider
 
-Sane defaults are added to the `replication` object if they're undefined.  All `reducerKeys` are replicated and `queryable` by default.  And the `baseQuery` ensures that only instances which have not been deleted are queried by default.
-
-The [provider `key`](https://github.com/loggur/react-redux-provide#key) also defaults to:
-```js
-const key = ({ props }) => props[idKey] ? `${idKey}=${props[idKey]}` : null;
-```
-
-You can override this `key` by simply setting it on the created provider object afterwards, if necessary.
 
 
 ## Example
 
-Let's create a `test` provider, with `testFoo` and `testBar` as states to be created/updated/deleted.  The `testFoo` state will default to "foo", and the `testBar` state will default to "bar".
+This example
 
 ```js
-// src/providers/test.js
+// test/counter-multi.js
 
-import provideCrud from 'provide-crud';
+import provideMulti from 'provide-multi';
+import counter, { INCREMENT, DECREMENT, INITIAL_STATE } from './counter';
 
-const test = provideCrud('test', {
-  foo: 'foo',
-  bar: 'bar'
+const counterMulti = provideMulti({
+  name: 'counter',
+  provider: counter,
+  actionTypes: { INCREMENT, DECREMENT },
+  initialState: INITIAL_STATE,
 });
 
-export default test;
+export default counterMulti;
 ```
 
+```js
+// test/counter.js
+
+export const INCREMENT = 'INCREMENT';
+export const DECREMENT = 'DECREMENT';
+export const INITIAL_STATE = {
+  value: 0
+}
+const update = (state, mutations) =>
+  Object.assign({}, state, mutations)
+
+const actions = {
+  increment() {
+    return { type: INCREMENT };
+  },
+  decrement() {
+    return { type: DECREMENT };
+  }
+}
+
+const reducers = {
+  counter(state = INITIAL_STATE, action) {
+    switch (action.type) {
+      case INCREMENT:
+        state = update(state, { value: state.value + 1 });
+        break;
+      case DECREMENT:
+        state = update(state, { value: state.value - 1 });
+        break;
+      default:
+        return state;
+    }
+    return state;
+  }
+}
+
+export default {
+  actions, reducers
+};
+```
 You'll then have a provider with the following actions:
 
-- `createTest (Object state, Function genId, Optional Function onSuccess)`
-- `updateTest (Object updates, Optional Function onSuccess)`
-- `deleteTest (Optional Function onSuccess)`
-- `undeleteTest (Optional Function onSuccess)`
-- `setTestFoo (Mixed testFoo)`
-- `setTestBar (Mixed testBar)`
+- `addCounter ()`
+- `removeCounter ()`
+- `increment (Int index)`
+- `decrement (Int index)`
 
 And reducers:
 
-- `testId`
-- `testDeleted`
-- `testFoo`
-- `testBar`
+- `counters`
 
 
-## Real world example
-
-See [`provide-user`](https://github.com/loggur/provide-user).  Also see [Lumbur's user login component](https://github.com/loggur/lumbur/blob/master/src/components/UserLogIn.js) for an example where this is used.
-
-
-## Protip
-
-Use [`provide-id-gen`](https://github.com/loggur/provide-id-gen) for your `genId` argument when creating an instance!
+## References
+- [Applying redux reducers to arrays](http://blog.scottlogic.com/2016/05/19/redux-reducer-arrays.html)
+- [React redux provide](https://github.com/loggur/react-redux-provide)

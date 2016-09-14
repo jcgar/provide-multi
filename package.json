@@ -1,12 +1,12 @@
 {
-  "name": "provide-crud",
-  "version": "1.0.0-rc.7",
-  "description": "Provider factory for Creating, Reading, Updating, and Deleting resources.",
+  "name": "provide-multi",
+  "version": "1.0.0",
+  "description": "Provider factory for creating multiple instances of another provider.",
   "main": "./lib/index.js",
   "scripts": {
     "build:lib": "babel src --out-dir lib",
-    "build:umd": "webpack src/index.js dist/provide-crud.js --config webpack.config.development.js",
-    "build:umd:min": "webpack src/index.js dist/provide-crud.min.js --config webpack.config.production.js",
+    "build:umd": "webpack src/index.js dist/provide-multi.js --config webpack.config.development.js",
+    "build:umd:min": "webpack src/index.js dist/provide-multi.min.js --config webpack.config.production.js",
     "build": "npm run build:lib && npm run build:umd && npm run build:umd:min",
     "clean": "rimraf lib dist coverage",
     "prepublish": "npm run clean && npm run build",
@@ -24,25 +24,21 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/loggur/provide-crud.git"
+    "url": "https://github.com/jcgar/provide-multi.git"
   },
   "keywords": [
     "react",
     "redux",
     "provide",
-    "crud",
-    "create",
-    "read",
-    "update",
-    "delete",
-    "resource"
+    "multi",
+    "instance"
   ],
-  "author": "timbur",
+  "author": "jcgar",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/loggur/provide-crud/issues"
+    "url": "https://github.com/jcgar/provide-multi/issues"
   },
-  "homepage": "https://github.com/loggur/provide-crud",
+  "homepage": "https://github.com/jcgar/provide-multi",
   "devDependencies": {
     "babel-cli": "^6.6.0",
     "babel-core": "^6.7.0",

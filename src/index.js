@@ -1,151 +1,73 @@
-export default function provideCrud(
-  name = 'resource', init = {}, replication = {}, clientStateKeys
-) {
+export default function provideMulti(props) {
+
+  const { name, provider, actionTypes, initialState } = props;
+
   const properName = name[0].toUpperCase()+name.substring(1);
   const capitalName = name.toUpperCase();
+  const INITIAL_STATE = [];
 
-  const CREATE = `CREATE_${capitalName}`;
-  const CREATED = `CREATED_${capitalName}`;
-  const UPDATE = `UPDATE_${capitalName}`;
-  const DELETE = `DELETE_${capitalName}`;
-  const UNDELETE = `UNDELETE_${capitalName}`;
-
+  const ADD = `ADD_${capitalName}`;
+  const REMOVE = `REMOVE_${capitalName}`;
   const constants = {
-    [CREATE]: CREATE,
-    [CREATED]: CREATED,
-    [UPDATE]: UPDATE,
-    [DELETE]: DELETE,
-    [UNDELETE]: UNDELETE
-  };
+    [ADD]: ADD,
+    [REMOVE]: REMOVE,
+  }
 
-  const idKey = `${name}Id`;
-  const defaultId = typeof init.id === 'undefined' ? '' : init.id;
-  const defaultKey = name;
-  const key = ({ props }) => props[idKey] ? `${idKey}=${props[idKey]}` : null;
   const actions = {};
   const reducers = {};
-
-  delete init.id;
-  reducers[idKey] = (state = defaultId, action) => {
-    switch (action.type) {
-      case CREATE:
-        return action[idKey];
-
-      default:
-        return state;
-    }
-  };
-
-  const createActionKey = `create${properName}`;
-  actions[createActionKey] = (state, genId, onSuccess) => {
-    return (dispatch, getState, providerApi) => {
-      state[idKey] = genId();
-
-      providerApi.createInstance(state, crudInstance => {
-        crudInstance.store.dispatch({ ...state, type: CREATE });
-
-        if (onSuccess) {
-          onSuccess(crudInstance.store.getState());
+  const reduceIndexed = (reducer, actionTypes) => {
+    const reduced = (state = INITIAL_STATE, action) => {
+      if (actionTypes[action.type]) {
+        if (action.index >= 0 && action.index < state.length) {
+          state = [
+            ...state.slice(0, action.index),
+            reducer(state[action.index], action),
+            ...state.slice(action.index + 1)
+          ];
         }
-
-        dispatch({ ...state, type: CREATED });
-      });
-    };
-  };
-
-  const updateActionKey = `update${properName}`;
-  actions[updateActionKey] = (updates, onSuccess) => {
-    return (dispatch, getState) => {
-      dispatch({ ...updates, type: UPDATE });
-
-      if (onSuccess) {
-        onSuccess(getState());
-      }
-    };
-  };
-
-  const deleteActionKey = `delete${properName}`;
-  actions[deleteActionKey] = (onSuccess) => {
-    return (dispatch, getState) => {
-      dispatch({ type: DELETE });
-
-      if (onSuccess) {
-        onSuccess(getState());
-      }
-    };
-  };
-
-  const undeleteActionKey = `undelete${properName}`;
-  actions[undeleteActionKey] = (onSuccess) => {
-    return (dispatch, getState) => {
-      dispatch({ type: UNDELETE });
-
-      if (onSuccess) {
-        onSuccess(getState());
-      }
-    };
-  };
-
-  const deletedReducerKey = `${name}Deleted`;
-  const defaultDeleted = init.deleted || false;
-  delete init.deleted;
-  reducers[deletedReducerKey] = (state = defaultDeleted, action) => {
-    switch (action.type) {
-      case DELETE:
-        return true;
-
-      case UNDELETE:
-        return false;
-
-      default:
         return state;
+      }
+      switch (action.type) {
+        case ADD:
+          return [
+            ...state,
+            initialState
+          ];
+        case REMOVE:
+          if (state.length == 0) {
+            return state
+          }
+          return state.slice(0,state.length-1);
+      }
+      return state;
     }
+    return reduced;
+  }
+
+
+  const bindIndexToDispatchedAction = (actionCreator, index) =>
+    (dispatch, getState) => (...args) => {
+      const action = Object.assign(actionCreator(...args), { index });
+      dispatch(action);
+    }
+
+  for (const key of Object.keys(provider.actions)){
+    actions[key] = (index) => bindIndexToDispatchedAction(provider.actions[key], index);
   };
 
-  for (let initKey in init) {
-    let properKey = initKey[0].toUpperCase()+initKey.substring(1);
-    let reducerKey = name+properKey;
-    let properReducerKey = properName+properKey;
-    let initialState = init[initKey];
-
-    actions[`set${properReducerKey}`] = state => actions[updateActionKey]({
-      [reducerKey]: state
-    });
-
-    reducers[reducerKey] = (state = initialState, action) => {
-      switch (action.type) {
-        case CREATE:
-        case UPDATE:
-          return typeof action[reducerKey] === 'undefined'
-            ? state
-            : action[reducerKey];
-
-        default:
-          return state;
-      }
-    };
+  for (const key of Object.keys(provider.reducers)){
+    reducers[`${key}Multi`] = reduceIndexed(provider.reducers[key], actionTypes);
   }
 
-  if (typeof replication.reducerKeys === 'undefined') {
-    replication.reducerKeys = true;
-  }
-  if (typeof replication.queryable === 'undefined') {
-    replication.queryable = true;
-  }
-  if (typeof replication.baseQuery === 'undefined') {
-    replication.baseQuery = {};
-  }
-  if (typeof replication.baseQuery[deletedReducerKey] === 'undefined') {
-    replication.baseQuery[deletedReducerKey] = false;
-  }
+  const addActionKey = `add${properName}`;
+  const removeActionKey = `remove${properName}`;
+  actions[addActionKey] = () => ({ type: ADD });
+  actions[removeActionKey] = () => ({ type: REMOVE });
 
   return {
-    ...constants,
-    defaultKey,
-    key,
     actions,
     reducers,
-    replication,
-    clientStateKeys
+    constants,
   };
+
 }

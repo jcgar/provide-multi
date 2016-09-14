@@ -1,146 +1,95 @@
 import { instantiateProvider } from 'react-redux-provide';
-import provideCrud from '../src/index';
 import expect from 'expect';
 
-const test = provideCrud('test', {
-  foo: 'foo',
-  bar: 'bar'
+import provideMulti from '../src/index';
+import counter, { INCREMENT, DECREMENT, INITIAL_STATE } from './counter';
+
+
+const test = provideMulti({
+  name: 'counter',
+  provider: counter,
+  actionTypes: { INCREMENT, DECREMENT },
+  initialState: INITIAL_STATE,
 });
 
 const testInstance = instantiateProvider(
-  { props: { testId: '123' } },
+  { props: {} },
   test
 );
 
 const { store, actionCreators } = testInstance;
 
-describe('provide-crud', () => {
-  it('should create the instance with the correct `providerKey`', () => {
-    expect(testInstance.providerKey).toBe('testId=123');
+describe('provide-multi', () => {
+
+
+  it('should provide a namespaced `add${Name}` action', () => {
+    expect(typeof testInstance.actions.addCounter).toBe('function');
   });
 
-  it('should provide a namespaced `create` action', () => {
-    expect(typeof testInstance.actions.createTest).toBe('function');
+  it('should provide a namespaced `remove${Name}` action', () => {
+    expect(typeof testInstance.actions.removeCounter).toBe('function');
   });
 
-  it('should provide a namespaced `update` action', () => {
-    expect(typeof testInstance.actions.updateTest).toBe('function');
+  it('should provide namespaced `${reducer}Multi` reducers with the correct initial state (empty array)', () => {
+    expect(store.getState().counterMulti).toEqual([]);
   });
 
-  it('should provide a namespaced `delete` action', () => {
-    expect(typeof testInstance.actions.deleteTest).toBe('function');
+  it('should properly add an instance', () => {
+    testInstance.actionCreators.addCounter();
+    expect(store.getState().counterMulti).toEqual([INITIAL_STATE]);
   });
-
-  it('should provide a namespaced `undelete` action', () => {
-    expect(typeof testInstance.actions.undeleteTest).toBe('function');
+  it('should properly add a second instance', () => {
+    testInstance.actionCreators.addCounter();
+    expect(store.getState().counterMulti).toEqual([INITIAL_STATE, INITIAL_STATE]);
   });
-
-  it('should provide a namespaced `deleted` reducer', () => {
-    expect(typeof testInstance.reducers.testDeleted).toBe('function');
+  it('should properly remove the instances', () => {
+    testInstance.actionCreators.removeCounter();
+    expect(store.getState().counterMulti).toEqual([INITIAL_STATE]);
+    testInstance.actionCreators.removeCounter();
+    expect(store.getState().counterMulti).toEqual([]);
   });
-
-  it(
-    'should provide namespaced actions for setting each namespaced reducer',
-    () => {
-      expect(typeof testInstance.actions.setTestFoo).toBe('function');
-      expect(typeof testInstance.actions.setTestBar).toBe('function');
-    }
-  );
-
-  it('should provide namespaced reducers', () => {
-    expect(typeof testInstance.reducers.testFoo).toBe('function');
-    expect(typeof testInstance.reducers.testBar).toBe('function');
+  it('should properly remove an instance when there are no instances', () => {
+    testInstance.actionCreators.removeCounter();
+    expect(store.getState().counterMulti).toEqual([]);
   });
-
-  it('should have initialized with the correct states', () => {
-    const state = store.getState();
-
-    expect(state.testId).toBe('');
-    expect(state.testFoo).toBe('foo');
-    expect(state.testBar).toBe('bar');
-    expect(state.testDeleted).toBe(false);
+  it('should properly execute all actions', () => {
+      testInstance.actionCreators.addCounter();
+      testInstance.actionCreators.increment(0)();
+      expect(store.getState().counterMulti).toEqual([{value: 1,warning: false}]);
+      testInstance.actionCreators.decrement(0)();
+      expect(store.getState().counterMulti).toEqual([{value: 0,warning: false}]);
+      testInstance.actionCreators.decrement(0)();
+      expect(store.getState().counterMulti).toEqual([{value: -1,warning: false}]);
+      testInstance.actionCreators.removeCounter();
   });
-
-  it('should properly create', () => {
-    testInstance.actionCreators.createTest(
-      { testFoo: 'FOO!', testBar: 'BAR!' },
-      () => '123',
-      state => {
-        expect(state.testId).toBe('123');
-        expect(state.testFoo).toBe('FOO!');
-        expect(state.testBar).toBe('BAR!');
-        expect(state.testDeleted).toBe(false);
-      }
-    );
-
-    const state = store.getState();
-    expect(state.testId).toBe('123');
-    expect(state.testFoo).toBe('FOO!');
-    expect(state.testBar).toBe('BAR!');
-    expect(state.testDeleted).toBe(false);
+  it('should properly execute an action in two different instances', () => {
+    testInstance.actionCreators.addCounter();
+    testInstance.actionCreators.addCounter();
+    testInstance.actionCreators.increment(0)();
+    expect(store.getState().counterMulti).toEqual([{value: 1,warning: false},{value: 0, warning: false}]);
+    testInstance.actionCreators.increment(0)();
+    expect(store.getState().counterMulti).toEqual([{value: 2,warning: false},{value: 0, warning: false}]);
+    testInstance.actionCreators.increment(1)();
+    expect(store.getState().counterMulti).toEqual([{value: 2,warning: false},{value: 1, warning: false}]);
+    testInstance.actionCreators.increment(1)();
+    expect(store.getState().counterMulti).toEqual([{value: 2,warning: false},{value: 2, warning: false}]);
+    testInstance.actionCreators.increment(0)();
+    expect(store.getState().counterMulti).toEqual([{value: 3,warning: false},{value: 2, warning: false}]);
+    testInstance.actionCreators.removeCounter();
+    testInstance.actionCreators.removeCounter();
   });
-
-  it('should properly update', () => {
-    testInstance.actionCreators.updateTest(
-      { testFoo: 'FOO!!!', testBar: 'BAR!!!' },
-      state => {
-        expect(state.testId).toBe('123');
-        expect(state.testFoo).toBe('FOO!!!');
-        expect(state.testBar).toBe('BAR!!!');
-        expect(state.testDeleted).toBe(false);
-      }
-    );
-
-    const state = store.getState();
-    expect(state.testId).toBe('123');
-    expect(state.testFoo).toBe('FOO!!!');
-    expect(state.testBar).toBe('BAR!!!');
-    expect(state.testDeleted).toBe(false);
-  });
-
-  it('should properly delete', () => {
-    testInstance.actionCreators.deleteTest(state => {
-      expect(state.testId).toBe('123');
-      expect(state.testFoo).toBe('FOO!!!');
-      expect(state.testBar).toBe('BAR!!!');
-      expect(state.testDeleted).toBe(true);
-    });
-
-    const state = store.getState();
-    expect(state.testId).toBe('123');
-    expect(state.testFoo).toBe('FOO!!!');
-    expect(state.testBar).toBe('BAR!!!');
-    expect(state.testDeleted).toBe(true);
-  });
-
-  it('should properly undelete', () => {
-    testInstance.actionCreators.undeleteTest(state => {
-      expect(state.testId).toBe('123');
-      expect(state.testFoo).toBe('FOO!!!');
-      expect(state.testBar).toBe('BAR!!!');
-      expect(state.testDeleted).toBe(false);
-    });
-
-    const state = store.getState();
-    expect(state.testId).toBe('123');
-    expect(state.testFoo).toBe('FOO!!!');
-    expect(state.testBar).toBe('BAR!!!');
-    expect(state.testDeleted).toBe(false);
-  });
-
-  it('should properly set an individual state', () => {
-    testInstance.actionCreators.setTestFoo('FOO!!!!!');
-
-    const state = store.getState();
-    expect(state.testId).toBe('123');
-    expect(state.testFoo).toBe('FOO!!!!!');
-    expect(state.testBar).toBe('BAR!!!');
-    expect(state.testDeleted).toBe(false);
-  });
-
-  it('should have included default replication', () => {
-    expect(test.replication.reducerKeys).toBe(true);
-    expect(test.replication.queryable).toBe(true);
-    expect(test.replication.baseQuery.testDeleted).toBe(false);
+  it('should properly ignore an out of bounds indexed action', () => {
+    testInstance.actionCreators.addCounter();
+    testInstance.actionCreators.addCounter();
+    testInstance.actionCreators.increment(0)();
+    expect(store.getState().counterMulti).toEqual([{value: 1,warning: false},{value: 0, warning: false}]);
+    testInstance.actionCreators.increment(2)();
+    expect(store.getState().counterMulti).toEqual([{value: 1,warning: false},{value: 0, warning: false}]);
+    testInstance.actionCreators.increment(-1)();
+    expect(store.getState().counterMulti).toEqual([{value: 1,warning: false},{value: 0, warning: false}]);
+    testInstance.actionCreators.increment(1)();
+    expect(store.getState().counterMulti).toEqual([{value: 1,warning: false},{value: 1, warning: false}]);
+    testInstance.actionCreators.removeCounter();
+    testInstance.actionCreators.removeCounter();
   });
 });
