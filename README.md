@@ -44,7 +44,7 @@ Also, every reducer will be replicated with a 'Multi' suffix, holding an array o
 ```js
 <MyElement onClick={increment}) />
 ```
-- Refer action in in multi provider, for instance index '0'
+- Refer action in multi provider, for instance index '0'
 ```js
 <MyElement onClick={increment(0)}) />
 ```
